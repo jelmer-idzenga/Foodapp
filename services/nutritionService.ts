@@ -14,7 +14,7 @@ export const estimateNutrition = async (
   unit: string
 ): Promise<NutritionValues & { reasoning: string }> => {
   // Use process.env.API_KEY directly as required by the coding guidelines
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY;
   if (!apiKey) {
     throw new Error("MISSING_API_KEY");
   }
@@ -62,7 +62,7 @@ export const estimateNutrition = async (
 // Analyzing a freeform meal description to estimate its total nutritional value.
 export const estimateFreeformRecipe = async (description: string): Promise<NutritionValues & { reasoning: string }> => {
   // Use process.env.API_KEY directly as required by the coding guidelines
-  const apiKey = process.env.API_KEY;
+  const apiKey = import.meta.env.VITE_GOOGLE_AI_API_KEY;
   if (!apiKey) {
     throw new Error("MISSING_API_KEY");
   }
