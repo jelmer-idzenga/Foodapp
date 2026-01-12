@@ -1,10 +1,21 @@
-
 <!DOCTYPE html>
 <html lang="nl">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
     <title>Liva - Jouw Voedingscoach</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#6495CE">
+    <meta name="mobile-web-app-capable" content="yes">
+    <link rel="manifest" href="/manifest.json">
+    
+    <!-- iOS Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Liva">
+    <link rel="apple-touch-icon" href="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=180&h=180">
+
     <!-- Dependencies -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
@@ -37,28 +48,47 @@
     </script>
 
     <style>
+        :root {
+          --safe-area-top: env(safe-area-inset-top);
+          --safe-area-bottom: env(safe-area-inset-bottom);
+        }
+
         body { 
           font-family: 'Poppins', sans-serif;
           background: fixed linear-gradient(135deg, #f0f7ff 0%, #ffffff 100%);
           min-height: 100vh;
+          overscroll-behavior-y: contain;
+          -webkit-tap-highlight-color: transparent;
         }
+
         .glass {
           background: rgba(255, 255, 255, 0.7);
           backdrop-filter: blur(10px);
           -webkit-backdrop-filter: blur(10px);
           border: 1px solid rgba(255, 255, 255, 0.3);
         }
+
         .hover-scale { transition: transform 0.2s ease; }
         .hover-scale:hover { transform: scale(1.02); }
+
         @keyframes fadeIn {
           from { opacity: 0; transform: translateY(10px); }
           to { opacity: 1; transform: translateY(0); }
         }
+
         .animate-fade-in { animation: fadeIn 0.4s ease-out forwards; }
         .custom-scrollbar::-webkit-scrollbar { width: 6px; }
         .custom-scrollbar::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
-        .tab-active { background-color: white; color: #6495CE; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); }
+        
+        /* Mobile Safe Areas */
+        header { padding-top: calc(1.25rem + var(--safe-area-top)) !important; }
+        nav { bottom: calc(1.5rem + var(--safe-area-bottom)) !important; }
+        main { padding-bottom: calc(8rem + var(--safe-area-bottom)) !important; }
+
         input:focus, select:focus, textarea:focus { outline: 2px solid #6495CE !important; }
+
+        /* Smooth scrolling on iOS */
+        * { -webkit-overflow-scrolling: touch; }
     </style>
 
     <script type="importmap">

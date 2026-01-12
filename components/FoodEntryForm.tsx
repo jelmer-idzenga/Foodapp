@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { estimateNutrition, estimateFreeformRecipe } from '../services/nutritionService';
 import { FoodLogEntry, NutritionValues, Recipe } from '../types';
@@ -22,6 +21,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ onAddLog, savedRecipes, d
   const [freeformDesc, setFreeformDesc] = useState('');
   const [productLibrary, setProductLibrary] = useState<string[]>([]);
   const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [showManualFields, setShowManualFields] = useState(false);
 
   useEffect(() => {
     const loadLibrary = async () => {
@@ -43,8 +43,8 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ onAddLog, savedRecipes, d
 
   const handleError = (error: any) => {
     console.error("Estimation error:", error);
-    // Use a generic error message that doesn't prompt for API key management, as per guidelines.
-    alert("Oeps! Er is iets misgegaan bij het berekenen van de voedingswaarden. Controleer je internetverbinding of probeer het handmatig in te vullen.");
+    alert("Oeps! Er is iets misgegaan bij het berekenen. Je kunt de waarden nu handmatig invullen via de knop hieronder.");
+    setShowManualFields(true);
   };
 
   const handleEstimate = async () => {
@@ -59,6 +59,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ onAddLog, savedRecipes, d
         fat: result.fat
       });
       setReasoning(result.reasoning);
+      setShowManualFields(true);
     } catch (error) {
       handleError(error);
     } finally {
@@ -79,6 +80,7 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ onAddLog, savedRecipes, d
       });
       setName(freeformDesc.slice(0, 30).trim() + '...');
       setReasoning(result.reasoning);
+      setShowManualFields(true);
     } catch (error) {
       handleError(error);
     } finally {
@@ -117,10 +119,6 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ onAddLog, savedRecipes, d
         alert("Vul een beschrijving in van je maaltijd.");
         return;
       }
-      if (macros.calories === 0) {
-        alert("Bereken eerst de voedingswaarden of vul ze handmatig in.");
-        return;
-      }
       
       onAddLog({
         name: name || "Snelle maaltijd",
@@ -140,6 +138,16 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ onAddLog, savedRecipes, d
     setReasoning('');
     setFreeformDesc('');
     setSuggestions([]);
+    setShowManualFields(false);
+  };
+
+  const isFormIncomplete = () => {
+    if (activeTab === 'recipe') {
+      return !selectedRecipeId;
+    }
+    
+    const isTextMissing = activeTab === 'item' ? !name : !freeformDesc;
+    return isTextMissing || macros.calories <= 0;
   };
 
   return (
@@ -220,19 +228,31 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ onAddLog, savedRecipes, d
                 </select>
               </div>
             </div>
-            <button 
-              type="button" 
-              onClick={handleEstimate}
-              disabled={isEstimating || !name}
-              className="w-full py-4 bg-brand-blue/10 text-brand-blue-dark rounded-2xl font-bold hover:bg-brand-blue/20 disabled:opacity-50 transition-all border-2 border-brand-blue/10 hover-scale flex items-center justify-center gap-2"
-            >
-              {isEstimating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-brand-blue border-t-transparent rounded-full animate-spin"></div>
-                  Berekenen...
-                </>
-              ) : '✨ Laat Liva het uitrekenen'}
-            </button>
+            <div className="flex flex-col gap-3">
+              <button 
+                type="button" 
+                onClick={handleEstimate}
+                disabled={isEstimating || !name}
+                className="w-full py-4 bg-brand-blue text-white rounded-2xl font-bold hover:bg-brand-blue-dark disabled:opacity-50 transition-all shadow-lg shadow-brand-blue/20 flex items-center justify-center gap-2"
+              >
+                {isEstimating ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                    Liva rekent...
+                  </>
+                ) : '✨ Bereken met AI'}
+              </button>
+              
+              {!showManualFields && !isEstimating && (
+                <button 
+                  type="button"
+                  onClick={() => setShowManualFields(true)}
+                  className="text-xs font-bold text-gray-400 hover:text-brand-blue transition-colors py-2 uppercase tracking-widest text-center"
+                >
+                  Of handmatig macro's invullen
+                </button>
+              )}
+            </div>
           </div>
         )}
 
@@ -267,22 +287,34 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ onAddLog, savedRecipes, d
                 required
               />
             </div>
-            <button 
-              type="button" 
-              onClick={handleFreeformEstimate}
-              disabled={isEstimating || !freeformDesc}
-              className="w-full py-4 bg-brand-mint/10 text-brand-mint border-2 border-brand-mint/20 rounded-2xl font-bold hover:bg-brand-mint/20 disabled:opacity-50 transition-all hover-scale"
-            >
-              {isEstimating ? 'Analyseren...' : '✨ Maaltijd analyseren'}
-            </button>
+            <div className="flex flex-col gap-3">
+              <button 
+                type="button" 
+                onClick={handleFreeformEstimate}
+                disabled={isEstimating || !freeformDesc}
+                className="w-full py-4 bg-brand-mint text-white rounded-2xl font-bold hover:bg-brand-mint-dark disabled:opacity-50 transition-all shadow-lg shadow-brand-mint/20"
+              >
+                {isEstimating ? 'Analyseren...' : '✨ Maaltijd analyseren'}
+              </button>
+              
+              {!showManualFields && !isEstimating && (
+                <button 
+                  type="button"
+                  onClick={() => setShowManualFields(true)}
+                  className="text-xs font-bold text-gray-400 hover:text-brand-mint transition-colors py-2 uppercase tracking-widest text-center"
+                >
+                  Of handmatig macro's invullen
+                </button>
+              )}
+            </div>
           </div>
         )}
 
-        {(macros.calories > 0 || isEstimating) && (
-          <div className="bg-gradient-soft p-6 rounded-[28px] space-y-5 border-2 border-white shadow-inner">
+        {(showManualFields || macros.calories > 0 || isEstimating) && activeTab !== 'recipe' && (
+          <div className="bg-gradient-soft p-6 rounded-[28px] space-y-5 border-2 border-white shadow-inner animate-fade-in">
             <div className="flex justify-between items-center">
-              <h4 className="font-extrabold text-gray-800 text-sm">Geraamde waarden:</h4>
-              <span className="text-[10px] bg-white px-2 py-1 rounded-lg border font-bold text-gray-400">PAS AAN INDIEN NODIG</span>
+              <h4 className="font-extrabold text-gray-800 text-sm">{reasoning ? 'Geraamde waarden:' : 'Vul macro\'s in:'}</h4>
+              <span className="text-[10px] bg-white px-2 py-1 rounded-lg border font-bold text-gray-400 uppercase tracking-widest">PAS AAN INDIEN NODIG</span>
             </div>
             <div className="grid grid-cols-2 gap-4">
               {[
@@ -315,7 +347,8 @@ const FoodEntryForm: React.FC<FoodEntryFormProps> = ({ onAddLog, savedRecipes, d
         <button 
           type="button"
           onClick={handleSubmit}
-          className="w-full py-5 bg-gradient-primary text-white rounded-2xl font-extrabold hover:shadow-xl hover:shadow-brand-blue/30 transition-all text-xl hover-scale flex items-center justify-center mt-2"
+          disabled={isFormIncomplete()}
+          className="w-full py-5 bg-gradient-primary text-white rounded-2xl font-extrabold shadow-lg shadow-brand-blue/10 hover:shadow-xl hover:shadow-brand-blue/30 disabled:opacity-40 disabled:shadow-none disabled:scale-100 disabled:cursor-not-allowed transition-all text-xl hover-scale flex items-center justify-center mt-2"
         >
           {activeTab === 'recipe' ? 'Recept toevoegen' : 'Toevoegen aan log'}
         </button>

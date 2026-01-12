@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { View, FoodLogEntry, Recipe, UserGoals } from './types';
 import * as db from './utils/storage';
@@ -18,8 +17,28 @@ const App: React.FC = () => {
   const [isTrainingDay, setIsTrainingDay] = useState(false);
   const [deviceId, setDeviceId] = useState<string>('');
   const [dbSetupRequired, setDbSetupRequired] = useState(false);
+  
+  // PWA Install Prompt State
+  const [deferredPrompt, setDeferredPrompt] = useState<any>(null);
+  const [showInstallBanner, setShowInstallBanner] = useState(false);
 
   useEffect(() => {
+    // Register Service Worker
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((registration) => console.log('SW registered'))
+          .catch((error) => console.log('SW registration failed'));
+      });
+    }
+
+    // Handle Install Prompt
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      setDeferredPrompt(e);
+      setShowInstallBanner(true);
+    });
+
     const initApp = async () => {
       try {
         const id = db.getDeviceId();
@@ -61,6 +80,17 @@ const App: React.FC = () => {
 
     initApp();
   }, []);
+
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') {
+      console.log('User accepted the install prompt');
+    }
+    setDeferredPrompt(null);
+    setShowInstallBanner(false);
+  };
 
   const handleAddLog = async (entry: Omit<FoodLogEntry, 'id' | 'timestamp'>) => {
     setIsLoading(true);
@@ -164,20 +194,36 @@ const App: React.FC = () => {
         </div>
       )}
 
-      <header className="bg-white/80 backdrop-blur-xl border-b border-white sticky top-0 z-40 px-6 py-5 md:px-12">
-        <div className="max-w-4xl mx-auto flex justify-between items-center">
+      {/* PWA Install Banner */}
+      {showInstallBanner && (
+        <div className="fixed top-0 left-0 right-0 z-[110] p-4 animate-fade-in">
+          <div className="max-w-md mx-auto glass border-2 border-white shadow-2xl rounded-[24px] p-4 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-brand-blue flex items-center justify-center text-white text-lg shadow-lg">📱</div>
+              <div>
+                <p className="text-sm font-black text-gray-800">Installeer Liva</p>
+                <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Op je startscherm</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button onClick={() => setShowInstallBanner(false)} className="px-3 py-2 text-[10px] font-black uppercase text-gray-400 hover:text-gray-600 transition-colors">Later</button>
+              <button onClick={handleInstallClick} className="px-4 py-2 bg-brand-blue text-white text-xs font-black rounded-xl shadow-lg shadow-brand-blue/20">Installeer</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <header className="bg-white/80 backdrop-blur-xl border-b border-white sticky top-0 z-40 px-6 py-5 md:px-12 flex items-end">
+        <div className="max-w-4xl mx-auto w-full flex justify-between items-center">
           <div className="flex items-center gap-4">
             <div 
               onClick={() => setCurrentView(View.DASHBOARD)}
               className="group w-14 h-14 bg-gray-50 rounded-full flex items-center justify-center shadow-xl transform hover:-rotate-3 hover:scale-105 transition-all duration-500 cursor-pointer overflow-hidden relative border-2 border-white"
             >
               <img 
-                src="app-icon.png" 
+                src="https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=200&h=200" 
                 alt="Liva Logo" 
                 className="w-full h-full object-cover"
-                onError={(e) => {
-                  (e.target as HTMLImageElement).src = "https://images.unsplash.com/photo-1514888286974-6c03e2ca1dba?auto=format&fit=crop&q=80&w=200&h=200";
-                }}
               />
               <div className="absolute inset-0 bg-white/5 opacity-0 group-hover:opacity-100 transition-opacity"></div>
             </div>
@@ -215,7 +261,7 @@ const App: React.FC = () => {
         {currentView === View.SETTINGS && goals && <GoalSettings initialGoals={goals} onSave={handleSaveGoals} />}
       </main>
 
-      <nav className="fixed bottom-6 left-6 right-6 flex items-center justify-around p-3 glass border-2 border-white rounded-[32px] shadow-2xl z-50 max-w-md mx-auto">
+      <nav className="fixed left-6 right-6 flex items-center justify-around p-3 glass border-2 border-white rounded-[32px] shadow-2xl z-50 max-w-md mx-auto">
         <NavButton active={currentView === View.DASHBOARD} onClick={() => setCurrentView(View.DASHBOARD)} label="Home" icon="🏠" />
         <NavButton active={currentView === View.LOG} onClick={() => setCurrentView(View.LOG)} label="Log" icon="✏️" />
         <NavButton active={currentView === View.RECIPES} onClick={() => setCurrentView(View.RECIPES)} label="Koken" icon="🍱" />

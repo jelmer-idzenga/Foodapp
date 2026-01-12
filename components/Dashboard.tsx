@@ -37,25 +37,27 @@ const Dashboard: React.FC<DashboardProps> = ({ logs, goals, isTrainingDay, setIs
   return (
     <div className="space-y-8 animate-fade-in">
       {/* Training Day Toggle Section */}
-      <div className="glass p-6 rounded-[24px] shadow-sm flex items-center justify-between border-2 border-white/50">
-        <div className="flex items-center gap-4">
-          <div className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-all duration-300 ${isTrainingDay ? 'bg-gradient-primary text-white rotate-12 shadow-lg' : 'bg-gray-100 text-gray-400'}`}>
-            <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <div className="glass p-5 rounded-[28px] shadow-sm flex items-center justify-between border-2 border-white/50">
+        <div className="flex items-center gap-4 min-w-0">
+          <div className={`flex-shrink-0 w-12 h-12 rounded-2xl flex items-center justify-center transition-all duration-300 ${isTrainingDay ? 'bg-brand-blue text-white shadow-lg shadow-brand-blue/20' : 'bg-gray-100 text-gray-400'}`}>
+            <svg className="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
             </svg>
           </div>
-          <div>
-            <h3 className="font-bold text-gray-800 text-lg">Focus vandaag</h3>
-            <p className="text-sm text-gray-500 font-medium">{isTrainingDay ? 'Macro-doelen voor training zijn actief' : 'Standaard dagelijkse doelen zijn actief'}</p>
+          <div className="min-w-0">
+            <h3 className="font-extrabold text-gray-800 text-base truncate">Focus vandaag</h3>
+            <p className="text-[11px] text-gray-500 font-bold leading-tight uppercase tracking-wider">
+              {isTrainingDay ? 'Training Doelen' : 'Rustdag Doelen'}
+            </p>
           </div>
         </div>
         <button 
           id="training-toggle"
           aria-pressed={isTrainingDay}
           onClick={() => setIsTrainingDay(!isTrainingDay)}
-          className={`relative inline-flex h-8 w-14 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-brand-blue/20 ${isTrainingDay ? 'bg-brand-blue' : 'bg-gray-200'}`}
+          className={`relative inline-flex h-7 w-12 flex-shrink-0 items-center rounded-full transition-all duration-300 focus:outline-none focus:ring-4 focus:ring-brand-blue/10 ${isTrainingDay ? 'bg-brand-blue' : 'bg-gray-200'}`}
         >
-          <span className={`inline-block h-6 w-6 transform rounded-full bg-white shadow-md transition-transform duration-300 ${isTrainingDay ? 'translate-x-7' : 'translate-x-1'}`} />
+          <span className={`inline-block h-5 w-5 transform rounded-full bg-white shadow-md transition-transform duration-300 ${isTrainingDay ? 'translate-x-6' : 'translate-x-1'}`} />
         </button>
       </div>
 
